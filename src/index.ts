@@ -1,9 +1,11 @@
+import "dotenv/config";
 import http from "node:http";
 import path from "node:path";
 
 import express from "express";
 import { Server } from "socket.io";
 import { kafkaClient } from "./lib/kafka-client.js";
+import { publisher, redis, subscriber } from "./lib/redis.js";
 
 const PORT = process.env.PORT ?? 8888;
 
@@ -32,13 +34,31 @@ kafkaConsumer.run({
     }
     const data = JSON.parse(message.value.toString());
     console.log(`KafkaConsumer Data Received`, { data });
-    io.emit("server:location:update", {
-      id: data.id,
-      latitude: data.latitude,
-      longitude: data.longitude,
-    });
+    await publisher.publish(
+      "location-updates:broadcast",
+      JSON.stringify({
+        id: data.id,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      }),
+    );
     await heartbeat();
   },
+});
+
+await subscriber.subscribe(
+  "location-updates:broadcast",
+  "location-updates:disconnect",
+);
+subscriber.on("message", (channel, message) => {
+  if (channel === "location-updates:broadcast") {
+    const data = JSON.parse(message);
+    io.emit("server:location:update", data);
+  }
+  if (channel === "location-updates:disconnect") {
+    const data = JSON.parse(message);
+    io.emit("server:client:disconnect", data);
+  }
 });
 
 io.attach(server);
@@ -63,7 +83,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`[Socket:${socket.id}]: Disconnected`);
-    io.emit("server:client:disconnect", { id: socket.id });
+    publisher.publish(
+      "location-updates:disconnect",
+      JSON.stringify({ id: socket.id }),
+    );
   });
 });
 

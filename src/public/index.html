@@ -3,21 +3,90 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Location Sharing Application</title>
+    <title>Live Location Tracker</title>
     <link
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <style>
-      #map {
-        height: 90vh;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body>
-    <div id="map"></div>
+    <header class="header">
+      <div class="header-title">
+        <i data-lucide="map-pin" class="icon"></i>
+        <span>Live Location Tracker</span>
+      </div>
+      <div class="header-actions">
+        <div class="connection-status">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Connecting...</span>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="dark-mode-toggle" title="Toggle dark mode">
+          <i data-lucide="moon" class="icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div id="map" style="top: 56px;"></div>
+
+    <button class="btn btn-secondary btn-icon toggle-sidebar-btn" id="toggle-sidebar" title="Toggle sidebar">
+      <i data-lucide="users" class="icon"></i>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>Connected Users</span>
+        <span class="user-count" id="user-count">0</span>
+      </div>
+      <div class="user-list" id="user-list">
+        <div class="no-users">No users connected</div>
+      </div>
+    </aside>
+
+    <button class="fab" id="recenter-btn" title="Recenter to my location">
+      <i data-lucide="locate-fixed" class="icon"></i>
+    </button>
+
+    <div class="modal-overlay" id="welcome-modal">
+      <div class="modal">
+        <h1 class="modal-title">Welcome! 👋</h1>
+        <p class="modal-subtitle">Enter your name to start sharing your location</p>
+        <div class="form-group">
+          <label class="form-label" for="username-input">Your Name</label>
+          <input
+            type="text"
+            class="form-input"
+            id="username-input"
+            placeholder="Enter your name"
+            maxlength="20"
+            autocomplete="off"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Choose your color</label>
+          <div class="color-picker-group" id="color-picker">
+            <div class="color-option selected" data-color="#e74c3c" style="background: #e74c3c;"></div>
+            <div class="color-option" data-color="#e67e22" style="background: #e67e22;"></div>
+            <div class="color-option" data-color="#f1c40f" style="background: #f1c40f;"></div>
+            <div class="color-option" data-color="#2ecc71" style="background: #2ecc71;"></div>
+            <div class="color-option" data-color="#1abc9c" style="background: #1abc9c;"></div>
+            <div class="color-option" data-color="#3498db" style="background: #3498db;"></div>
+            <div class="color-option" data-color="#9b59b6" style="background: #9b59b6;"></div>
+            <div class="color-option" data-color="#e91e63" style="background: #e91e63;"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" id="join-btn">
+          <i data-lucide="navigation" class="icon"></i>
+          Start Sharing
+        </button>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
